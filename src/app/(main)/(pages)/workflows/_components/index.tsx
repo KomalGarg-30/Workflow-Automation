@@ -15,7 +15,9 @@ const Workflows = async (props: Props) => {
           workflows.map((flow) => (
             <Workflow
               key={flow.id}
-              {...flow}
+              id={flow.id}
+              name={flow.name}
+              description={flow.description}
             />
           ))
         ) : (

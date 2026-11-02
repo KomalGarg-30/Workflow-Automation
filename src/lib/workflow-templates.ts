@@ -14,109 +14,53 @@ export type WorkflowTemplate = {
   edges: { id: string; source: string; target: string }[]
 }
 
-const createNode = (
-  id: string,
-  type: EditorCanvasTypes,
-  x: number,
-  description: string
-): EditorNodeType => ({
-  id,
-  type,
-  position: { x, y: 120 },
-  data: {
-    title: type,
-    description,
-    completed: false,
-    current: false,
-    metadata: {},
-    type,
-  },
-})
-
-const createDriveNotificationTemplate = (
+const createMessagingTemplate = (
   id: string,
   name: string,
   description: string,
   integration: Integration
-): WorkflowTemplate => ({
-  id,
-  name,
-  description,
-  integrations: [
-    { name: 'Google Drive', image: '/googleDrive.png' },
-    integration,
-  ],
-  nodes: [
-    createNode(
-      `${id}-trigger`,
-      'Google Drive',
-      80,
-      'Watch a connected Google Drive folder for changes.'
-    ),
-    createNode(
-      `${id}-action`,
-      integration.name,
-      440,
-      `Send a notification using ${integration.name}. Configure this action in the editor.`
-    ),
-  ],
-  edges: [
-    {
-      id: `${id}-trigger-to-action`,
-      source: `${id}-trigger`,
-      target: `${id}-action`,
+): WorkflowTemplate => {
+  const node: EditorNodeType = {
+    id: `${id}-action`,
+    type: integration.name,
+    position: { x: 240, y: 120 },
+    data: {
+      title: integration.name,
+      description: `Send a message using ${integration.name}. Configure it in the editor.`,
+      completed: false,
+      current: false,
+      metadata: {},
+      type: integration.name,
     },
-  ],
-})
+  }
+
+  return {
+    id,
+    name,
+    description,
+    integrations: [integration],
+    nodes: [node],
+    edges: [],
+  }
+}
 
 export const workflowTemplates: WorkflowTemplate[] = [
-  createDriveNotificationTemplate(
-    'drive-to-slack',
-    'Google Drive to Slack',
-    'Start with a Drive folder trigger and a Slack notification action.',
+  createMessagingTemplate(
+    'slack-message',
+    'Send a Slack message',
+    'Start with a Slack message step and choose a channel in the editor.',
     { name: 'Slack', image: '/slack.png' }
   ),
-  createDriveNotificationTemplate(
-    'drive-to-discord',
-    'Google Drive to Discord',
-    'Notify a Discord channel when your connected Drive folder changes.',
+  createMessagingTemplate(
+    'discord-message',
+    'Send a Discord message',
+    'Start with a Discord message step and configure its content in the editor.',
     { name: 'Discord', image: '/discord.png' }
   ),
-  createDriveNotificationTemplate(
-    'drive-to-telegram',
-    'Google Drive to Telegram',
-    'Notify a Telegram chat when your connected Drive folder changes.',
+  createMessagingTemplate(
+    'telegram-message',
+    'Send a Telegram message',
+    'Start with a Telegram message step and configure its content in the editor.',
     { name: 'Telegram', image: '/telegram.svg' }
   ),
-  {
-    id: 'drive-to-notion',
-    name: 'Google Drive to Notion',
-    description:
-      'Start with a Drive folder trigger and a Notion action for your workspace.',
-    integrations: [
-      { name: 'Google Drive', image: '/googleDrive.png' },
-      { name: 'Notion', image: '/notion.png' },
-    ],
-    nodes: [
-      createNode(
-        'drive-to-notion-trigger',
-        'Google Drive',
-        80,
-        'Watch a connected Google Drive folder for changes.'
-      ),
-      createNode(
-        'drive-to-notion-action',
-        'Notion',
-        440,
-        'Create a Notion entry. Configure this action in the editor.'
-      ),
-    ],
-    edges: [
-      {
-        id: 'drive-to-notion-trigger-to-action',
-        source: 'drive-to-notion-trigger',
-        target: 'drive-to-notion-action',
-      },
-    ],
-  },
 ]

@@ -16,8 +16,8 @@ const WorkflowButton = (props: Props) => {
   const handleClick = () => {
     setOpen(
       <CustomModal
-        title="Create a Workflow Automation"
-        subheading="Workflows are a powerfull that help you automate tasks."
+        title="Create a messaging workflow"
+        subheading="Build a message for Discord, Slack, or Telegram and send it from your workflow."
       >
         <Workflowform />
       </CustomModal>

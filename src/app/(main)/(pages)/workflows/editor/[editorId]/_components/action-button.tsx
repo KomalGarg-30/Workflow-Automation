@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { postContentToWebHook } from '@/app/(main)/(pages)/connections/_actions/discord-connection'
 import { onCreateNodeTemplate } from '../../../_actions/workflow-connections'
 import { toast } from 'sonner'
-import { onCreateNewPageInDatabase } from '@/app/(main)/(pages)/connections/_actions/notion-connection'
 import { postMessageToSlack } from '@/app/(main)/(pages)/connections/_actions/slack-connection'
 import { sendTelegramTestMessage } from '@/app/(main)/(pages)/connections/_actions/telegram-connection'
 
@@ -38,25 +37,6 @@ const ActionButton = ({
       }))
     }
   }, [nodeConnection.discordNode])
-
-  const onStoreNotionContent = useCallback(async () => {
-    console.log(
-      nodeConnection.notionNode.databaseId,
-      nodeConnection.notionNode.accessToken,
-      nodeConnection.notionNode.content
-    )
-    const response = await onCreateNewPageInDatabase(
-      nodeConnection.notionNode.databaseId,
-      nodeConnection.notionNode.accessToken,
-      nodeConnection.notionNode.content
-    )
-    if (response) {
-      nodeConnection.setNotionNode((prev: any) => ({
-        ...prev,
-        content: '',
-      }))
-    }
-  }, [nodeConnection.notionNode])
 
   const onStoreSlackContent = useCallback(async () => {
     const response = await postMessageToSlack(
@@ -126,20 +106,6 @@ const ActionButton = ({
       }
     }
 
-    if (currentService === 'Notion') {
-      const response = await onCreateNodeTemplate(
-        JSON.stringify(nodeConnection.notionNode.content),
-        currentService,
-        pathname.split('/').pop()!,
-        [],
-        nodeConnection.notionNode.accessToken,
-        nodeConnection.notionNode.databaseId
-      )
-
-      if (response) {
-        toast.message(response)
-      }
-    }
   }, [nodeConnection, channels])
 
   const renderActionButton = () => {
@@ -167,24 +133,6 @@ const ActionButton = ({
           <>
             <Button variant="outline" onClick={onSendTelegramMessage}>
               Test Message
-            </Button>
-            <Button
-              onClick={onCreateLocalNodeTempate}
-              variant="outline"
-            >
-              Save Template
-            </Button>
-          </>
-        )
-
-      case 'Notion':
-        return (
-          <>
-            <Button
-              variant="outline"
-              onClick={onStoreNotionContent}
-            >
-              Test
             </Button>
             <Button
               onClick={onCreateLocalNodeTempate}

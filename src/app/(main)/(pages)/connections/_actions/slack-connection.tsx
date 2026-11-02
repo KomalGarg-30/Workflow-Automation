@@ -28,8 +28,6 @@ export async function listBotChannels(
       headers: { Authorization: `Bearer ${slackAccessToken}` },
     })
 
-    console.log(data)
-
     if (!data.ok) throw new Error(data.error)
 
     if (!data?.channels?.length) return []
@@ -51,7 +49,7 @@ const postMessageInSlackChannel = async (
   content: string
 ): Promise<void> => {
   try {
-    await axios.post(
+    const response = await axios.post(
       'https://slack.com/api/chat.postMessage',
       { channel: slackChannel, text: content },
       {
@@ -61,12 +59,11 @@ const postMessageInSlackChannel = async (
         },
       }
     )
-    console.log(`Message posted successfully to channel ID: ${slackChannel}`)
+    if (!response.data.ok) {
+      throw new Error(response.data.error || 'Slack rejected the message.')
+    }
   } catch (error: any) {
-    console.error(
-      `Error posting message to Slack channel ${slackChannel}:`,
-      error?.response?.data || error.message
-    )
+    throw error
   }
 }
 
@@ -80,13 +77,18 @@ export const postMessageToSlack = async (
   if (!selectedSlackChannels?.length) return { message: 'Channel not selected' }
 
   try {
-    selectedSlackChannels
-      .map((channel) => channel?.value)
-      .forEach((channel) => {
-        postMessageInSlackChannel(slackAccessToken, channel, content)
-      })
+    await Promise.all(
+      selectedSlackChannels.map((channel) =>
+        postMessageInSlackChannel(slackAccessToken, channel.value, content)
+      )
+    )
   } catch (error) {
-    return { message: 'Message could not be sent to Slack' }
+    return {
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Message could not be sent to Slack.',
+    }
   }
 
   return { message: 'Success' }

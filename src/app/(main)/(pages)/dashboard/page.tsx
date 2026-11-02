@@ -1,20 +1,23 @@
 import Link from 'next/link'
-import { ArrowRight, CheckCircle2, CircleDashed, Workflow } from 'lucide-react'
+import { ArrowRight, MessagesSquare, Workflow } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import WorkflowButton from '../workflows/_components/workflow-button'
 import { onGetWorkflows } from '../workflows/_actions/workflow-connections'
 import { getCurrentUser } from '@/lib/auth'
+import { getUserData } from '../connections/_actions/get-user'
 
 export default async function DashboardPage() {
-  const [user, workflows] = await Promise.all([
+  const [user, workflows, connectionData] = await Promise.all([
     getCurrentUser(),
     onGetWorkflows(),
+    getUserData(),
   ])
   const userWorkflows = workflows ?? []
-  const publishedCount = userWorkflows.filter(
-    (workflow) => workflow.publish
-  ).length
+  const connectedMessagingApps =
+    (connectionData?.connections.filter((connection) =>
+      ['Discord', 'Slack'].includes(connection.type)
+    ).length || 0) + Number(Boolean(connectionData?.TelegramBot))
 
   return (
     <div className="relative flex flex-col gap-6 pb-8">
@@ -23,7 +26,7 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-semibold">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Welcome back{user?.name ? `, ${user.name}` : ''}. Here&apos;s your
-            automation overview.
+            messaging workflow overview.
           </p>
         </div>
         <WorkflowButton />
@@ -47,14 +50,14 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Published workflows
+              Connected messaging apps
             </CardTitle>
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            <MessagesSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <p className="text-3xl font-bold">{publishedCount}</p>
+            <p className="text-3xl font-bold">{connectedMessagingApps}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Workflows currently marked as published
+              Discord, Slack, and Telegram connections
             </p>
           </CardContent>
         </Card>
@@ -90,12 +93,8 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <span className="flex shrink-0 items-center gap-1.5 text-sm text-muted-foreground">
-                      {workflow.publish ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
-                      ) : (
-                        <CircleDashed className="h-4 w-4" />
-                      )}
-                      {workflow.publish ? 'Published' : 'Draft'}
+                      <Workflow className="h-4 w-4" />
+                      Workflow
                     </span>
                   </li>
                 ))}
@@ -137,8 +136,8 @@ export default async function DashboardPage() {
               </Link>
             </Button>
             <p className="pt-2 text-sm text-muted-foreground">
-              Connect your apps, then build and publish automations that work
-              for you.
+              Connect a messaging app, configure a message, then send it from
+              your workflow.
             </p>
           </CardContent>
         </Card>

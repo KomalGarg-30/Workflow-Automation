@@ -1,5 +1,5 @@
 'use client'
-import { EditorCanvasCardType, EditorNodeType } from '@/lib/types'
+import { EditorNodeType } from '@/lib/types'
 import { useEditor } from '@/providers/editor-provider'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactFlow, {
@@ -47,21 +47,13 @@ const EditorCanvas = (props: Props) => {
   const pathname = usePathname()
 
   const addNodeAtPosition = useCallback(
-    (type: EditorCanvasCardType['type'], x: number, y: number) => {
+    (type: keyof typeof EditorCanvasDefaultCardTypes, x: number, y: number) => {
       if (!reactFlowInstance) {
         toast.error('The workflow canvas is still loading.')
         return
       }
 
       const cardType = EditorCanvasDefaultCardTypes[type]
-      const hasTrigger = nodes.some(
-        (node) => EditorCanvasDefaultCardTypes[node.type].type === 'Trigger'
-      )
-      if (cardType.type === 'Trigger' && hasTrigger) {
-        toast('Only one trigger can be added to automations at the moment')
-        return
-      }
-
       const position = reactFlowInstance.screenToFlowPosition({ x, y })
       const newNode: EditorNodeType = {
         id: v4(),
@@ -78,11 +70,11 @@ const EditorCanvas = (props: Props) => {
       }
       setNodes((currentNodes) => currentNodes.concat(newNode))
     },
-    [nodes, reactFlowInstance]
+    [reactFlowInstance]
   )
 
   const addNodeFromSidebar = useCallback(
-    (type: EditorCanvasCardType['type']) => {
+    (type: keyof typeof EditorCanvasDefaultCardTypes) => {
       const bounds = canvasRef.current?.getBoundingClientRect()
       if (!bounds) {
         toast.error('The workflow canvas is not available.')
@@ -108,14 +100,14 @@ const EditorCanvas = (props: Props) => {
       //@ts-ignore
       setNodes((nds) => applyNodeChanges(changes, nds))
     },
-    [setNodes]
+    []
   )
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) =>
       //@ts-ignore
       setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges]
+    []
   )
 
   const onConnect = useCallback(
@@ -127,7 +119,7 @@ const EditorCanvas = (props: Props) => {
     (event: any) => {
       event.preventDefault()
 
-      const type: EditorCanvasCardType['type'] = event.dataTransfer.getData(
+      const type = event.dataTransfer.getData(
         'application/reactflow'
       )
 
@@ -148,11 +140,11 @@ const EditorCanvas = (props: Props) => {
             description: '',
             metadata: {},
             title: '',
-            type: 'Trigger',
+            type: 'Discord',
           },
           id: '',
           position: { x: 0, y: 0 },
-          type: 'Trigger',
+          type: 'Discord',
         },
       },
     })
@@ -164,18 +156,18 @@ const EditorCanvas = (props: Props) => {
 
   const nodeTypes = useMemo(
     () => ({
-      Action: EditorCanvasCardSingle,
-      Trigger: EditorCanvasCardSingle,
+      Slack: EditorCanvasCardSingle,
+      Discord: EditorCanvasCardSingle,
+      Telegram: EditorCanvasCardSingle,
+      'Google Drive': EditorCanvasCardSingle,
+      Notion: EditorCanvasCardSingle,
       Email: EditorCanvasCardSingle,
       Condition: EditorCanvasCardSingle,
       AI: EditorCanvasCardSingle,
-      Slack: EditorCanvasCardSingle,
-      'Google Drive': EditorCanvasCardSingle,
-      Notion: EditorCanvasCardSingle,
-      Discord: EditorCanvasCardSingle,
-      Telegram: EditorCanvasCardSingle,
       'Custom Webhook': EditorCanvasCardSingle,
       'Google Calendar': EditorCanvasCardSingle,
+      Trigger: EditorCanvasCardSingle,
+      Action: EditorCanvasCardSingle,
       Wait: EditorCanvasCardSingle,
     }),
     []
@@ -286,7 +278,7 @@ const EditorCanvas = (props: Props) => {
             edges={edges}
             nodes={nodes}
           >
-            <EditorCanvasSidebar nodes={nodes} onAddNode={addNodeFromSidebar} />
+            <EditorCanvasSidebar onAddNode={addNodeFromSidebar} />
           </FlowInstance>
         )}
       </ResizablePanel>

@@ -7,44 +7,6 @@ import { Connection } from '@/lib/types'
 import { useNodeConnections } from '@/providers/connections-provider'
 import { EditorState } from '@/providers/editor-provider'
 import { useFuzzieStore } from '@/store'
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-} from '@/components/ui/command'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { CheckIcon, ChevronsUpDown } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
-
-const frameworks = [
-  {
-    value: 'next.js',
-    label: 'Next.js',
-  },
-  {
-    value: 'sveltekit',
-    label: 'SvelteKit',
-  },
-  {
-    value: 'nuxt.js',
-    label: 'Nuxt.js',
-  },
-  {
-    value: 'remix',
-    label: 'Remix',
-  },
-  {
-    value: 'astro',
-    label: 'Astro',
-  },
-]
 
 const RenderConnectionAccordion = ({
   connection,
@@ -58,8 +20,6 @@ const RenderConnectionAccordion = ({
     image,
     description,
     connectionKey,
-    accessTokenKey,
-    alwaysTrue,
     slackSpecial,
   } = connection
 
@@ -67,20 +27,12 @@ const RenderConnectionAccordion = ({
   const { slackChannels, selectedSlackChannels, setSelectedSlackChannels } =
     useFuzzieStore()
 
-  const [open, setOpen] = React.useState(false)
-  const [value, setValue] = React.useState('')
-
-  const connectionData = (nodeConnection as any)[connectionKey]
-
   const isConnected =
-    title === 'Google Drive'
-      ? nodeConnection.googleNode.length > 0
-      : title === 'Telegram'
+    title === 'Telegram'
       ? Boolean(nodeConnection.telegramNode.botName)
-      : alwaysTrue ||
-        (nodeConnection[connectionKey] &&
-          accessTokenKey &&
-          connectionData[accessTokenKey!])
+      : title === 'Discord'
+      ? Boolean(nodeConnection.discordNode.webhookURL)
+      : Boolean(nodeConnection.slackNode.slackAccessToken)
 
   return (
     <AccordionContent key={title}>
@@ -98,7 +50,7 @@ const RenderConnectionAccordion = ({
               {slackChannels?.length ? (
                 <>
                   <div className="mb-4 ml-1">
-                    Select the slack channels to send notification and messages:
+                    Select Slack channels for this message:
                   </div>
                   <MultipleSelector
                     value={selectedSlackChannels}
@@ -113,7 +65,7 @@ const RenderConnectionAccordion = ({
                   />
                 </>
               ) : (
-                'No Slack channels found. Please add your Slack bot to your Slack channel'
+                'No Slack channels available. Add the Fuzzie bot to a channel, then refresh the editor.'
               )}
             </div>
           )}

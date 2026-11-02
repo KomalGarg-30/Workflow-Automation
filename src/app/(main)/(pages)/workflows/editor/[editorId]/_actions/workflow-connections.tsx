@@ -7,8 +7,7 @@ import { sendTelegramMessage } from '@/lib/telegram'
 export const onCreateNodesEdges = async (
   flowId: string,
   nodes: string,
-  edges: string,
-  flowPath: string
+  edges: string
 ) => {
   const user = await getCurrentUser()
   if (!user) return
@@ -18,25 +17,10 @@ export const onCreateNodesEdges = async (
     data: {
       nodes,
       edges,
-      flowPath: flowPath,
     },
   })
 
   if (flow.count) return { message: 'flow saved' }
-}
-
-export const onFlowPublish = async (workflowId: string, state: boolean) => {
-  const user = await getCurrentUser()
-  if (!user) return 'Please sign in'
-  const published = await db.workflows.updateMany({
-    where: { id: workflowId, userId: user.authId },
-    data: {
-      publish: state,
-    },
-  })
-
-  if (!published.count) return 'Workflow not found'
-  return state ? 'Workflow published' : 'Workflow unpublished'
 }
 
 export const onRunDiscordWorkflow = async (workflowId: string) => {

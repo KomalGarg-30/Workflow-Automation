@@ -57,12 +57,8 @@ const ConnectionCard = ({
             href={
               title == 'Discord'
                 ? '/api/auth/connect/discord'
-                : title == 'Notion'
-                ? '/api/auth/connect/notion'
                 : title == 'Slack'
                 ? '/api/auth/connect/slack'
-                : title == 'Google Drive'
-                ? '/api/auth/google'
                 : title == 'Telegram'
                 ? '/connections'
                 : '#'

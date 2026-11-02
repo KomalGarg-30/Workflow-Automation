@@ -2,10 +2,9 @@
 import { Button } from '@/components/ui/button'
 import { useNodeConnections } from '@/providers/connections-provider'
 import { usePathname } from 'next/navigation'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useState } from 'react'
 import {
   onCreateNodesEdges,
-  onFlowPublish,
   onRunDiscordWorkflow,
   onRunTelegramWorkflow,
 } from '../_actions/workflow-connections'
@@ -18,37 +17,25 @@ type Props = {
   nodes: any[]
 }
 
-const getFlowPath = (nodes: Props['nodes'], edges: Props['edges']) =>
-  edges.flatMap((edge) => {
-    const target = nodes.find((node) => node.id === edge.target)
-    return target ? [target.type] : []
-  })
-
 const FlowInstance = ({ children, edges, nodes }: Props) => {
   const pathname = usePathname()
-  const [isFlow, setIsFlow] = useState([])
   const [isRunning, setIsRunning] = useState(false)
   const { nodeConnection } = useNodeConnections()
   const workflowId = pathname.split('/').pop()!
   const hasDiscordNode = nodes.some((node) => node.type === 'Discord')
   const hasTelegramNode = nodes.some((node) => node.type === 'Telegram')
   const [isTelegramRunning, setIsTelegramRunning] = useState(false)
+  const isSending = isRunning || isTelegramRunning
 
   const onFlowAutomation = useCallback(async () => {
     const flow = await onCreateNodesEdges(
       workflowId,
       JSON.stringify(nodes),
-      JSON.stringify(edges),
-      JSON.stringify(getFlowPath(nodes, edges))
+      JSON.stringify(edges)
     )
 
     if (flow) toast.message(flow.message)
   }, [edges, nodes, workflowId])
-
-  const onPublishWorkflow = useCallback(async () => {
-    const response = await onFlowPublish(workflowId, true)
-    if (response) toast.message(response)
-  }, [workflowId])
 
   const onRunDiscord = async () => {
     setIsRunning(true)
@@ -56,8 +43,7 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
       const flow = await onCreateNodesEdges(
         workflowId,
         JSON.stringify(nodes),
-        JSON.stringify(edges),
-        JSON.stringify(getFlowPath(nodes, edges))
+        JSON.stringify(edges)
       )
       if (!flow) {
         toast.error('Unable to save the workflow before running it.')
@@ -75,9 +61,9 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
       }
 
       const result = await onRunDiscordWorkflow(workflowId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
-      } else {
+      } else if ('message' in result) {
         toast.success(result.message)
       }
     } catch {
@@ -93,8 +79,7 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
       const flow = await onCreateNodesEdges(
         workflowId,
         JSON.stringify(nodes),
-        JSON.stringify(edges),
-        JSON.stringify(getFlowPath(nodes, edges))
+        JSON.stringify(edges)
       )
       if (!flow) {
         toast.error('Unable to save the workflow before running it.')
@@ -112,9 +97,9 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
       }
 
       const result = await onRunTelegramWorkflow(workflowId)
-      if (result.error) {
+      if ('error' in result) {
         toast.error(result.error)
-      } else {
+      } else if ('message' in result) {
         toast.success(result.message)
       }
     } catch {
@@ -123,24 +108,6 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
       setIsTelegramRunning(false)
     }
   }
-
-  const onAutomateFlow = async () => {
-    const flows: any = []
-    const connectedEdges = edges.map((edge) => edge.target)
-    connectedEdges.map((target) => {
-      nodes.map((node) => {
-        if (node.id === target) {
-          flows.push(node.type)
-        }
-      })
-    })
-
-    setIsFlow(flows)
-  }
-
-  useEffect(() => {
-    onAutomateFlow()
-  }, [edges])
 
   return (
     <div className="flex flex-col gap-2">
@@ -154,22 +121,16 @@ const FlowInstance = ({ children, edges, nodes }: Props) => {
         <Button
           variant="outline"
           onClick={onRunDiscord}
-          disabled={!hasDiscordNode || isRunning || isTelegramRunning}
+          disabled={!hasDiscordNode || isSending}
         >
           {isRunning ? 'Sending…' : 'Run Discord'}
         </Button>
         <Button
           variant="outline"
           onClick={onRunTelegram}
-          disabled={!hasTelegramNode || isRunning || isTelegramRunning}
+          disabled={!hasTelegramNode || isSending}
         >
           {isTelegramRunning ? 'Sending…' : 'Run Telegram'}
-        </Button>
-        <Button
-          disabled={isFlow.length < 1}
-          onClick={onPublishWorkflow}
-        >
-          Publish
         </Button>
       </div>
       {children}

@@ -4,10 +4,6 @@ import { EditorState } from '@/providers/editor-provider'
 import { getDiscordConnectionUrl } from '@/app/(main)/(pages)/connections/_actions/discord-connection'
 import { getTelegramConnection } from '@/app/(main)/(pages)/connections/_actions/telegram-connection'
 import {
-  getNotionConnection,
-  getNotionDatabase,
-} from '@/app/(main)/(pages)/connections/_actions/notion-connection'
-import {
   getSlackConnection,
   listBotChannels,
 } from '@/app/(main)/(pages)/connections/_actions/slack-connection'
@@ -55,8 +51,6 @@ export const onContentChange = (
       ...prev,
       content: event.target.value,
     }))
-  } else if (nodeType === 'Notion') {
-    onNotionContent(nodeConnection, event)
   }
 }
 
@@ -98,11 +92,13 @@ export const onAddTemplate = (
 }
 
 export const onConnections = async (
-  nodeConnection: ConnectionProviderProps,
-  editorState: EditorState,
-  googleFile: any
+  nodeConnection: Pick<
+    ConnectionProviderProps,
+    'setDiscordNode' | 'setTelegramNode' | 'setSlackNode'
+  >,
+  selectedTitle: string
 ) => {
-  if (editorState.editor.selectedNode.data.title == 'Discord') {
+  if (selectedTitle === 'Discord') {
     const connection = await getDiscordConnectionUrl()
     if (connection) {
       nodeConnection.setDiscordNode({
@@ -113,7 +109,7 @@ export const onConnections = async (
       })
     }
   }
-  if (editorState.editor.selectedNode.data.title == 'Telegram') {
+  if (selectedTitle === 'Telegram') {
     const connection = await getTelegramConnection()
     if (connection) {
       nodeConnection.setTelegramNode({
@@ -122,29 +118,7 @@ export const onConnections = async (
       })
     }
   }
-  if (editorState.editor.selectedNode.data.title == 'Notion') {
-    const connection = await getNotionConnection()
-    if (connection) {
-      nodeConnection.setNotionNode({
-        accessToken: connection.accessToken,
-        databaseId: connection.databaseId,
-        workspaceName: connection.workspaceName,
-        content: {
-          name: googleFile.name,
-          kind: googleFile.kind,
-          type: googleFile.mimeType,
-        },
-      })
-
-      if (nodeConnection.notionNode.databaseId !== '') {
-        const response = await getNotionDatabase(
-          nodeConnection.notionNode.databaseId,
-          nodeConnection.notionNode.accessToken
-        )
-      }
-    }
-  }
-  if (editorState.editor.selectedNode.data.title == 'Slack') {
+  if (selectedTitle === 'Slack') {
     const connection = await getSlackConnection()
     if (connection) {
       nodeConnection.setSlackNode({
@@ -167,14 +141,4 @@ export const fetchBotSlackChannels = async (
   setSlackChannels: (slackChannels: Option[]) => void
 ) => {
   await listBotChannels(token)?.then((channels) => setSlackChannels(channels))
-}
-
-export const onNotionContent = (
-  nodeConnection: ConnectionProviderProps,
-  event: React.ChangeEvent<HTMLInputElement>
-) => {
-  nodeConnection.setNotionNode((prev: any) => ({
-    ...prev,
-    content: event.target.value,
-  }))
 }

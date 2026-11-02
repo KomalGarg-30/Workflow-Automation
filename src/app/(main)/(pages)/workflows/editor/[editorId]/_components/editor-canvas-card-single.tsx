@@ -25,13 +25,11 @@ const EditorCanvasCardSingle = ({ data }: { data: EditorCanvasCardType }) => {
 
   return (
     <>
-      {data.type !== 'Trigger' && data.type !== 'Google Drive' && (
-        <CustomHandle
-          type="target"
-          position={Position.Top}
-          style={{ zIndex: 100 }}
-        />
-      )}
+      <CustomHandle
+        type="target"
+        position={Position.Top}
+        style={{ zIndex: 100 }}
+      />
       <Card
         onClick={(e) => {
           e.stopPropagation()

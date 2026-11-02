@@ -9,7 +9,6 @@ const Connections = async () => {
   user_info?.connections.forEach((connection) => {
     connections[connection.type] = true
   })
-  connections['Google Drive'] = Boolean(user_info?.LocalGoogleCredential)
   connections.Telegram = Boolean(user_info?.TelegramBot)
 
   return (

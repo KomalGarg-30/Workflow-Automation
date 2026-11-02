@@ -12,8 +12,6 @@ export const WorkflowFormSchema = z.object({
 })
 
 export type ConnectionTypes =
-  | 'Google Drive'
-  | 'Notion'
   | 'Slack'
   | 'Discord'
   | 'Telegram'
@@ -23,18 +21,16 @@ export type Connection = {
   description: string
   image: string
   connectionKey: keyof ConnectionProviderProps
-  accessTokenKey?: string
-  alwaysTrue?: boolean
   slackSpecial?: boolean
 }
 
 export type EditorCanvasTypes =
-  | 'Email'
-  | 'Condition'
-  | 'AI'
   | 'Slack'
   | 'Discord'
   | 'Telegram'
+  | 'Email'
+  | 'Condition'
+  | 'AI'
   | 'Google Drive'
   | 'Notion'
   | 'Custom Webhook'
@@ -42,6 +38,8 @@ export type EditorCanvasTypes =
   | 'Trigger'
   | 'Action'
   | 'Wait'
+
+export type MessagingConnectionKey = 'slackNode' | 'discordNode' | 'telegramNode'
 
 export type EditorCanvasCardType = {
   title: string
@@ -91,10 +89,8 @@ export type EditorActions =
       }
     }
 
-export const nodeMapper: Record<string, string> = {
-  Notion: 'notionNode',
+export const nodeMapper: Record<string, MessagingConnectionKey> = {
   Slack: 'slackNode',
   Discord: 'discordNode',
   Telegram: 'telegramNode',
-  'Google Drive': 'googleNode',
 }

@@ -4,7 +4,6 @@ import { getCurrentUser } from '@/lib/auth'
 
 const providerScopes: Record<string, string> = {
   discord: 'identify guilds connections guilds.members.read email webhook.incoming',
-  notion: '',
   slack: 'chat:write,channels:read,groups:read,mpim:read,im:read',
 }
 
@@ -19,8 +18,6 @@ export async function GET(
   const clientId =
     provider === 'discord'
       ? process.env.DISCORD_CLIENT_ID
-      : provider === 'notion'
-      ? process.env.NOTION_CLIENT_ID
       : provider === 'slack'
       ? process.env.SLACK_CLIENT_ID
       : null
@@ -32,8 +29,6 @@ export async function GET(
   const redirectUri =
     provider === 'slack'
       ? process.env.SLACK_REDIRECT_URI
-      : provider === 'notion'
-      ? process.env.NOTION_REDIRECT_URI
       : `${baseUrl}/api/auth/callback/discord`
   if (!redirectUri) throw new Error(`${provider} redirect URI is not configured.`)
 
@@ -41,8 +36,6 @@ export async function GET(
   const authorizationUrl = new URL(
     provider === 'discord'
       ? 'https://discord.com/oauth2/authorize'
-      : provider === 'notion'
-      ? 'https://api.notion.com/v1/oauth/authorize'
       : 'https://slack.com/oauth/v2/authorize'
   )
 
@@ -52,14 +45,6 @@ export async function GET(
       response_type: 'code',
       redirect_uri: redirectUri,
       scope: providerScopes[provider],
-      state,
-    }).toString()
-  } else if (provider === 'notion') {
-    authorizationUrl.search = new URLSearchParams({
-      client_id: clientId,
-      response_type: 'code',
-      owner: 'user',
-      redirect_uri: redirectUri,
       state,
     }).toString()
   } else {

@@ -8,7 +8,6 @@ const publicPaths = [
   '/api/auth/sign-in',
   '/api/auth/sign-up',
   '/api/auth/sign-out',
-  '/api/drive-activity/notification',
 ]
 
 export default function middleware(request: NextRequest) {
@@ -25,9 +24,3 @@ export default function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
 }
-
-// https://www.googleapis.com/auth/userinfo.email
-// https://www.googleapis.com/auth/userinfo.profile
-// https://www.googleapis.com/auth/drive.activity.readonly
-// https://www.googleapis.com/auth/drive.metadata
-// https://www.googleapis.com/auth/drive.readonly

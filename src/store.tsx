@@ -11,8 +11,6 @@ export interface Option {
 }
 
 type FuzzieStore = {
-  googleFile: any
-  setGoogleFile: (googleFile: any) => void
   slackChannels: Option[]
   setSlackChannels: (slackChannels: Option[]) => void
   selectedSlackChannels: Option[]
@@ -20,13 +18,10 @@ type FuzzieStore = {
 }
 
 export const useFuzzieStore = create<FuzzieStore>()((set) => ({
-  googleFile: {},
-  setGoogleFile: (googleFile: any) => set({ googleFile }),
   slackChannels: [],
   setSlackChannels: (slackChannels: Option[]) => set({ slackChannels }),
   selectedSlackChannels: [],
   setSelectedSlackChannels: (selectedSlackChannels: Option[]) =>
     set({ selectedSlackChannels }),
 }))
-
 

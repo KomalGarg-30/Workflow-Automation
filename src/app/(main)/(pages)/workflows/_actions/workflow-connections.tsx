@@ -4,50 +4,12 @@ import { db } from '@/lib/db'
 import { getCurrentUser } from '@/lib/auth'
 import { workflowTemplates } from '@/lib/workflow-templates'
 
-export const getGoogleListener = async () => {
-  const user = await getCurrentUser()
-
-  if (user) {
-    const listener = await db.user.findUnique({
-      where: {
-        authId: user.authId,
-      },
-      select: {
-        googleResourceId: true,
-      },
-    })
-
-    if (listener) return listener
-  }
-}
-
-export const onFlowPublish = async (workflowId: string, state: boolean) => {
-  const user = await getCurrentUser()
-  if (!user) return 'Please sign in'
-  const workflow = await db.workflows.findFirst({
-    where: { id: workflowId, userId: user.authId },
-    select: { id: true },
-  })
-  if (!workflow) return 'Workflow not found'
-
-  const published = await db.workflows.update({
-    where: { id: workflow.id },
-    data: {
-      publish: state,
-    },
-  })
-
-  if (published.publish) return 'Workflow published'
-  return 'Workflow unpublished'
-}
-
 export const onCreateNodeTemplate = async (
   content: string,
   type: string,
   workflowId: string,
   channels?: Option[],
-  accessToken?: string,
-  notionDbId?: string
+  accessToken?: string
 ) => {
   const user = await getCurrentUser()
   if (!user) return
@@ -78,80 +40,18 @@ export const onCreateNodeTemplate = async (
     if (response) return 'Telegram template saved'
   }
   if (type === 'Slack') {
-    const response = await db.workflows.update({
+    await db.workflows.update({
       where: {
         id: workflowId,
       },
       data: {
         slackTemplate: content,
         slackAccessToken: accessToken,
+        slackChannels: channels?.map((channel) => channel.value) || [],
       },
     })
 
-    if (response) {
-      const channelList = await db.workflows.findUnique({
-        where: {
-          id: workflowId,
-        },
-        select: {
-          slackChannels: true,
-        },
-      })
-
-      if (channelList) {
-        //remove duplicates before insert
-        const NonDuplicated = channelList.slackChannels.filter(
-          (channel) => channel !== channels![0].value
-        )
-
-        NonDuplicated!
-          .map((channel) => channel)
-          .forEach(async (channel) => {
-            await db.workflows.update({
-              where: {
-                id: workflowId,
-              },
-              data: {
-                slackChannels: {
-                  push: channel,
-                },
-              },
-            })
-          })
-
-        return 'Slack template saved'
-      }
-      channels!
-        .map((channel) => channel.value)
-        .forEach(async (channel) => {
-          await db.workflows.update({
-            where: {
-              id: workflowId,
-            },
-            data: {
-              slackChannels: {
-                push: channel,
-              },
-            },
-          })
-        })
-      return 'Slack template saved'
-    }
-  }
-
-  if (type === 'Notion') {
-    const response = await db.workflows.update({
-      where: {
-        id: workflowId,
-      },
-      data: {
-        notionTemplate: content,
-        notionAccessToken: accessToken,
-        notionDbId: notionDbId,
-      },
-    })
-
-    if (response) return 'Notion template saved'
+    return 'Slack template saved'
   }
 }
 

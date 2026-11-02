@@ -15,21 +15,11 @@ export type ConnectionProviderProps = {
     content: string
   }
   setTelegramNode: React.Dispatch<React.SetStateAction<any>>
-  googleNode: {}[]
-  setGoogleNode: React.Dispatch<React.SetStateAction<any>>
-  notionNode: {
-    accessToken: string
-    databaseId: string
-    workspaceName: string
-    content: ''
-  }
   workflowTemplate: {
     discord?: string
     telegram?: string
-    notion?: string
     slack?: string
   }
-  setNotionNode: React.Dispatch<React.SetStateAction<any>>
   slackNode: {
     appId: string
     authedUserId: string
@@ -45,7 +35,6 @@ export type ConnectionProviderProps = {
     React.SetStateAction<{
       discord?: string
       telegram?: string
-      notion?: string
       slack?: string
     }>
   >
@@ -69,17 +58,9 @@ const InitialValues: ConnectionProviderProps = {
     botName: '',
     content: '',
   },
-  googleNode: [],
-  notionNode: {
-    accessToken: '',
-    databaseId: '',
-    workspaceName: '',
-    content: '',
-  },
   workflowTemplate: {
     discord: '',
     telegram: '',
-    notion: '',
     slack: '',
   },
   slackNode: {
@@ -93,10 +74,8 @@ const InitialValues: ConnectionProviderProps = {
     content: '',
   },
   isLoading: false,
-  setGoogleNode: () => undefined,
   setDiscordNode: () => undefined,
   setTelegramNode: () => undefined,
-  setNotionNode: () => undefined,
   setSlackNode: () => undefined,
   setIsLoading: () => undefined,
   setWorkFlowTemplate: () => undefined,
@@ -108,8 +87,6 @@ const { Provider } = ConnectionsContext
 export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
   const [discordNode, setDiscordNode] = useState(InitialValues.discordNode)
   const [telegramNode, setTelegramNode] = useState(InitialValues.telegramNode)
-  const [googleNode, setGoogleNode] = useState(InitialValues.googleNode)
-  const [notionNode, setNotionNode] = useState(InitialValues.notionNode)
   const [slackNode, setSlackNode] = useState(InitialValues.slackNode)
   const [isLoading, setIsLoading] = useState(InitialValues.isLoading)
   const [workflowTemplate, setWorkFlowTemplate] = useState(
@@ -121,10 +98,6 @@ export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
     setDiscordNode,
     telegramNode,
     setTelegramNode,
-    googleNode,
-    setGoogleNode,
-    notionNode,
-    setNotionNode,
     slackNode,
     setSlackNode,
     isLoading,

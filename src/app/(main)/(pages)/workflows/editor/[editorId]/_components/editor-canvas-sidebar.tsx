@@ -1,5 +1,4 @@
 'use client'
-import { EditorCanvasTypes, EditorNodeType } from '@/lib/types'
 import { useNodeConnections } from '@/providers/connections-provider'
 import { useEditor } from '@/providers/editor-provider'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -28,30 +27,67 @@ import {
 import RenderConnectionAccordion from './render-connection-accordion'
 import RenderOutputAccordion from './render-output-accordian'
 import { useFuzzieStore } from '@/store'
+import { toast } from 'sonner'
 
 type Props = {
-  nodes: EditorNodeType[]
-  onAddNode: (type: EditorCanvasTypes) => void
+  onAddNode: (type: keyof typeof EditorCanvasDefaultCardTypes) => void
 }
 
-const EditorCanvasSidebar = ({ nodes, onAddNode }: Props) => {
+const EditorCanvasSidebar = ({ onAddNode }: Props) => {
   const { state } = useEditor()
   const { nodeConnection } = useNodeConnections()
-  const { googleFile, setSlackChannels } = useFuzzieStore()
-  useEffect(() => {
-    if (state) {
-      onConnections(nodeConnection, state, googleFile)
-    }
-  }, [state])
+  const { setSlackChannels } = useFuzzieStore()
+  const selectedNodeTitle = state.editor.selectedNode.data.title
 
   useEffect(() => {
-    if (nodeConnection.slackNode.slackAccessToken) {
-      fetchBotSlackChannels(
-        nodeConnection.slackNode.slackAccessToken,
-        setSlackChannels
-      )
+    let active = true
+    const loadConnection = async () => {
+      try {
+        await onConnections(
+          {
+            setDiscordNode: nodeConnection.setDiscordNode,
+            setTelegramNode: nodeConnection.setTelegramNode,
+            setSlackNode: nodeConnection.setSlackNode,
+          },
+          selectedNodeTitle
+        )
+      } catch {
+        if (active) toast.error('Unable to load the selected app connection.')
+      }
     }
-  }, [nodeConnection])
+
+    if (selectedNodeTitle) {
+      void loadConnection()
+    }
+
+    return () => {
+      active = false
+    }
+  }, [
+    selectedNodeTitle,
+    nodeConnection.setDiscordNode,
+    nodeConnection.setTelegramNode,
+    nodeConnection.setSlackNode,
+  ])
+
+  useEffect(() => {
+    const token = nodeConnection.slackNode.slackAccessToken
+    if (!token) {
+      setSlackChannels([])
+      return
+    }
+
+    let active = true
+    fetchBotSlackChannels(token, (channels) => {
+      if (active) setSlackChannels(channels)
+    }).catch(() => {
+      if (active) toast.error('Unable to load Slack channels.')
+    })
+
+    return () => {
+      active = false
+    }
+  }, [nodeConnection.slackNode.slackAccessToken, setSlackChannels])
 
   return (
     <aside>
@@ -71,16 +107,8 @@ const EditorCanvasSidebar = ({ nodes, onAddNode }: Props) => {
           <p className="text-sm text-muted-foreground">
             Click or drag a step onto the canvas.
           </p>
-          {Object.entries(EditorCanvasDefaultCardTypes)
-            .filter(
-              ([cardKey, cardType]) =>
-                (!nodes.length &&
-                  (cardType.type === 'Trigger' ||
-                    cardKey === 'Discord' ||
-                    cardKey === 'Telegram')) ||
-                (nodes.length && cardType.type === 'Action')
-            )
-            .map(([cardKey, cardValue]) => (
+          {Object.entries(EditorCanvasDefaultCardTypes).map(
+            ([cardKey, cardValue]) => (
               <Card
                 key={cardKey}
                 draggable
@@ -88,26 +116,36 @@ const EditorCanvasSidebar = ({ nodes, onAddNode }: Props) => {
                 tabIndex={0}
                 aria-label={`Add ${cardKey} step`}
                 className="w-full cursor-pointer border-black bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900"
-                onClick={() => onAddNode(cardKey as EditorCanvasTypes)}
+                onClick={() =>
+                  onAddNode(cardKey as keyof typeof EditorCanvasDefaultCardTypes)
+                }
                 onKeyDown={(event) => {
                   if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault()
-                    onAddNode(cardKey as EditorCanvasTypes)
+                    onAddNode(
+                      cardKey as keyof typeof EditorCanvasDefaultCardTypes
+                    )
                   }
                 }}
                 onDragStart={(event) =>
-                  onDragStart(event, cardKey as EditorCanvasTypes)
+                  onDragStart(
+                    event,
+                    cardKey as keyof typeof EditorCanvasDefaultCardTypes
+                  )
                 }
               >
                 <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <EditorCanvasIconHelper type={cardKey as EditorCanvasTypes} />
+                  <EditorCanvasIconHelper
+                    type={cardKey as keyof typeof EditorCanvasDefaultCardTypes}
+                  />
                   <CardTitle className="text-md">
                     {cardKey}
                     <CardDescription>{cardValue.description}</CardDescription>
                   </CardTitle>
                 </CardHeader>
               </Card>
-            ))}
+            )
+          )}
         </TabsContent>
         <TabsContent
           value="settings"

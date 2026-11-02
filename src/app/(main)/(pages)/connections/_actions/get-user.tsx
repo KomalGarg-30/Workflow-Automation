@@ -11,7 +11,6 @@ export const getUserData = async () => {
     where: { authId: user.authId },
     select: {
       connections: { select: { type: true } },
-      LocalGoogleCredential: { select: { id: true } },
       TelegramBot: { select: { id: true } },
     },
   })
