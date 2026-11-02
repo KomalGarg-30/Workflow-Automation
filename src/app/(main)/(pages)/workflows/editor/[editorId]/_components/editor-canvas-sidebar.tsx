@@ -31,9 +31,10 @@ import { useFuzzieStore } from '@/store'
 
 type Props = {
   nodes: EditorNodeType[]
+  onAddNode: (type: EditorCanvasTypes) => void
 }
 
-const EditorCanvasSidebar = ({ nodes }: Props) => {
+const EditorCanvasSidebar = ({ nodes, onAddNode }: Props) => {
   const { state } = useEditor()
   const { nodeConnection } = useNodeConnections()
   const { googleFile, setSlackChannels } = useFuzzieStore()
@@ -67,17 +68,31 @@ const EditorCanvasSidebar = ({ nodes }: Props) => {
           value="actions"
           className="flex flex-col gap-4 p-4"
         >
+          <p className="text-sm text-muted-foreground">
+            Click or drag a step onto the canvas.
+          </p>
           {Object.entries(EditorCanvasDefaultCardTypes)
             .filter(
-              ([_, cardType]) =>
-                (!nodes.length && cardType.type === 'Trigger') ||
+              ([cardKey, cardType]) =>
+                (!nodes.length &&
+                  (cardType.type === 'Trigger' || cardKey === 'Discord')) ||
                 (nodes.length && cardType.type === 'Action')
             )
             .map(([cardKey, cardValue]) => (
               <Card
                 key={cardKey}
                 draggable
-                className="w-full cursor-grab border-black bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900"
+                role="button"
+                tabIndex={0}
+                aria-label={`Add ${cardKey} step`}
+                className="w-full cursor-pointer border-black bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-900"
+                onClick={() => onAddNode(cardKey as EditorCanvasTypes)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault()
+                    onAddNode(cardKey as EditorCanvasTypes)
+                  }
+                }}
                 onDragStart={(event) =>
                   onDragStart(event, cardKey as EditorCanvasTypes)
                 }

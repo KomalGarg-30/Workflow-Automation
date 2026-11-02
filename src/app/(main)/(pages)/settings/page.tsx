@@ -2,20 +2,25 @@ import ProfileForm from '@/components/forms/profile-form'
 import React from 'react'
 import ProfilePicture from './_components/profile-picture'
 import { db } from '@/lib/db'
-import { currentUser } from '@clerk/nextjs'
+import { getCurrentUser } from '@/lib/auth'
 
 type Props = {}
 
 const Settings = async (props: Props) => {
-  const authUser = await currentUser()
+  const authUser = await getCurrentUser()
   if (!authUser) return null
 
-  const user = await db.user.findUnique({ where: { clerkId: authUser.id } })
+  const user = await db.user.findUnique({
+    where: { authId: authUser.authId },
+    select: { name: true, email: true, profileImage: true },
+  })
   const removeProfileImage = async () => {
     'use server'
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return null
     const response = await db.user.update({
       where: {
-        clerkId: authUser.id,
+        authId: currentUser.authId,
       },
       data: {
         profileImage: '',
@@ -26,10 +31,11 @@ const Settings = async (props: Props) => {
 
   const uploadProfileImage = async (image: string) => {
     'use server'
-    const id = authUser.id
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return null
     const response = await db.user.update({
       where: {
-        clerkId: id,
+        authId: currentUser.authId,
       },
       data: {
         profileImage: image,
@@ -42,9 +48,11 @@ const Settings = async (props: Props) => {
   const updateUserInfo = async (name: string) => {
     'use server'
 
+    const currentUser = await getCurrentUser()
+    if (!currentUser) return null
     const updateUser = await db.user.update({
       where: {
-        clerkId: authUser.id,
+        authId: currentUser.authId,
       },
       data: {
         name,

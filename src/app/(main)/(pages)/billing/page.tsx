@@ -1,6 +1,6 @@
 import React from 'react'
 import Stripe from 'stripe'
-import { currentUser } from '@clerk/nextjs'
+import { getCurrentUser } from '@/lib/auth'
 import { db } from '@/lib/db'
 import BillingDashboard from './_components/billing-dashboard'
 
@@ -18,23 +18,32 @@ const Billing = async (props: Props) => {
       apiVersion: '2023-10-16',
     })
 
-    const session = await stripe.checkout.sessions.listLineItems(session_id)
-    const user = await currentUser()
+    const user = await getCurrentUser()
     if (user) {
-      await db.user.update({
-        where: {
-          clerkId: user.id,
-        },
-        data: {
-          tier: session.data[0].description,
-          credits:
-            session.data[0].description == 'Unlimited'
-              ? 'Unlimited'
-              : session.data[0].description == 'Pro'
-              ? '100'
-              : '10',
-        },
-      })
+      const checkoutSession = await stripe.checkout.sessions.retrieve(session_id)
+      if (
+        checkoutSession.client_reference_id === user.authId &&
+        checkoutSession.payment_status === 'paid'
+      ) {
+        const session = await stripe.checkout.sessions.listLineItems(session_id)
+        const description = session.data[0]?.description
+        if (description) {
+          await db.user.update({
+            where: {
+              authId: user.authId,
+            },
+            data: {
+              tier: description,
+              credits:
+                description === 'Unlimited'
+                  ? 'Unlimited'
+                  : description === 'Pro'
+                  ? '100'
+                  : '10',
+            },
+          })
+        }
+      }
     }
   }
 

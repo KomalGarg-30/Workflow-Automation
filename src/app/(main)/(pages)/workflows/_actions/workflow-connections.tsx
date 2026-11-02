@@ -1,15 +1,16 @@
 'use server'
 import { Option } from '@/components/ui/multiple-selector'
 import { db } from '@/lib/db'
-import { auth, currentUser } from '@clerk/nextjs'
+import { getCurrentUser } from '@/lib/auth'
+import { workflowTemplates } from '@/lib/workflow-templates'
 
 export const getGoogleListener = async () => {
-  const { userId } = auth()
+  const user = await getCurrentUser()
 
-  if (userId) {
+  if (user) {
     const listener = await db.user.findUnique({
       where: {
-        clerkId: userId,
+        authId: user.authId,
       },
       select: {
         googleResourceId: true,
@@ -21,11 +22,16 @@ export const getGoogleListener = async () => {
 }
 
 export const onFlowPublish = async (workflowId: string, state: boolean) => {
-  console.log(state)
+  const user = await getCurrentUser()
+  if (!user) return 'Please sign in'
+  const workflow = await db.workflows.findFirst({
+    where: { id: workflowId, userId: user.authId },
+    select: { id: true },
+  })
+  if (!workflow) return 'Workflow not found'
+
   const published = await db.workflows.update({
-    where: {
-      id: workflowId,
-    },
+    where: { id: workflow.id },
     data: {
       publish: state,
     },
@@ -43,6 +49,14 @@ export const onCreateNodeTemplate = async (
   accessToken?: string,
   notionDbId?: string
 ) => {
+  const user = await getCurrentUser()
+  if (!user) return
+  const ownedWorkflow = await db.workflows.findFirst({
+    where: { id: workflowId, userId: user.authId },
+    select: { id: true },
+  })
+  if (!ownedWorkflow) return
+
   if (type === 'Discord') {
     const response = await db.workflows.update({
       where: {
@@ -136,11 +150,11 @@ export const onCreateNodeTemplate = async (
 }
 
 export const onGetWorkflows = async () => {
-  const user = await currentUser()
+  const user = await getCurrentUser()
   if (user) {
     const workflow = await db.workflows.findMany({
       where: {
-        userId: user.id,
+        userId: user.authId,
       },
     })
 
@@ -149,13 +163,13 @@ export const onGetWorkflows = async () => {
 }
 
 export const onCreateWorkflow = async (name: string, description: string) => {
-  const user = await currentUser()
+  const user = await getCurrentUser()
 
   if (user) {
     //create new workflow
     const workflow = await db.workflows.create({
       data: {
-        userId: user.id,
+        userId: user.authId,
         name,
         description,
       },
@@ -166,10 +180,34 @@ export const onCreateWorkflow = async (name: string, description: string) => {
   }
 }
 
+export const onCreateWorkflowFromTemplate = async (templateId: string) => {
+  const user = await getCurrentUser()
+  if (!user) return { error: 'Please sign in to use a workflow template.' }
+
+  const template = workflowTemplates.find(({ id }) => id === templateId)
+  if (!template) return { error: 'That workflow template is not available.' }
+
+  const workflow = await db.workflows.create({
+    data: {
+      userId: user.authId,
+      name: template.name,
+      description: template.description,
+      nodes: JSON.stringify(template.nodes),
+      edges: JSON.stringify(template.edges),
+    },
+    select: { id: true },
+  })
+
+  return { id: workflow.id }
+}
+
 export const onGetNodesEdges = async (flowId: string) => {
+  const user = await getCurrentUser()
+  if (!user) return
   const nodesEdges = await db.workflows.findUnique({
     where: {
       id: flowId,
+      userId: user.authId,
     },
     select: {
       nodes: true,

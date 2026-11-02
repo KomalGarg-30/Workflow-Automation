@@ -13,9 +13,10 @@ datasource db {
 model User {
   id Int @id @default(autoincrement())
 
-  clerkId      String  @unique
+  authId       String  @unique @default(uuid()) @map("clerkId")
   name         String?
   email        String  @unique
+  passwordHash String?
   profileImage String?
   tier         String? @default("Free")
   credits      String? @default("10")
@@ -26,6 +27,7 @@ model User {
   googleResourceId String?  @unique
 
   LocalGoogleCredential LocalGoogleCredential?
+  sessions              Session[]
   DiscordWebhook        DiscordWebhook[]
   Notion                Notion[]
   Slack                 Slack[]
@@ -33,9 +35,20 @@ model User {
   workflows             Workflows[]
 }
 
+model Session {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 model LocalGoogleCredential {
-  id          String @id @default(uuid())
-  accessToken String @unique
+  id           String    @id @default(uuid())
+  accessToken  String    @unique
+  refreshToken String?
+  expiresAt    DateTime?
 
   folderId   String?
   pageToken  String?
@@ -57,7 +70,7 @@ model DiscordWebhook {
   guildName   String
   guildId     String
   channelId   String        @unique
-  user        User          @relation(fields: [userId], references: [clerkId])
+  user        User          @relation(fields: [userId], references: [authId])
   userId      String
   connections Connections[]
 }
@@ -73,7 +86,7 @@ model Slack {
   teamId           String
   teamName         String
 
-  User        User          @relation(fields: [userId], references: [clerkId])
+  User        User          @relation(fields: [userId], references: [authId])
   userId      String
   connections Connections[]
 }
@@ -85,22 +98,24 @@ model Notion {
   databaseId    String        @unique
   workspaceName String
   workspaceIcon String
-  User          User          @relation(fields: [userId], references: [clerkId])
+  User          User          @relation(fields: [userId], references: [authId])
   userId        String
   connections   Connections[]
 }
 
 model Connections {
   id               String          @id @default(uuid())
-  type             String          @unique
+  type             String
   DiscordWebhook   DiscordWebhook? @relation(fields: [discordWebhookId], references: [id])
   discordWebhookId String?
   Notion           Notion?         @relation(fields: [notionId], references: [id])
   notionId         String?
-  User             User?           @relation(fields: [userId], references: [clerkId])
+  User             User?           @relation(fields: [userId], references: [authId])
   userId           String?
   Slack            Slack?          @relation(fields: [slackId], references: [id])
   slackId          String?
+
+  @@unique([userId, type])
 }
 
 model Workflows {
@@ -119,6 +134,6 @@ model Workflows {
   cronPath          String?
   publish           Boolean? @default(false)
   description       String
-  User              User     @relation(fields: [userId], references: [clerkId])
+  User              User     @relation(fields: [userId], references: [authId])
   userId            String
 }

@@ -1,5 +1,6 @@
 import { NextResponse, NextRequest } from 'next/server'
 import Stripe from 'stripe'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const stripe = new Stripe(process.env.STRIPE_SECRET!, {
@@ -15,6 +16,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getCurrentUser()
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const stripe = new Stripe(process.env.STRIPE_SECRET!, {
     typescript: true,
     apiVersion: '2023-10-16',
@@ -28,9 +34,10 @@ export async function POST(req: NextRequest) {
       },
     ],
     mode: 'subscription',
-    success_url:
-      'https://localhost:3000/billing?session_id={CHECKOUT_SESSION_ID}',
-    cancel_url: 'https://localhost:3000/billing',
+    client_reference_id: user.authId,
+    metadata: { authId: user.authId },
+    success_url: `${process.env.NEXT_PUBLIC_URL}/billing?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${process.env.NEXT_PUBLIC_URL}/billing`,
   })
   return NextResponse.json(session.url)
 }

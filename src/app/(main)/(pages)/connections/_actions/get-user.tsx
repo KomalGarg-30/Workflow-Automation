@@ -1,16 +1,17 @@
 'use server'
 
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
 
-export const getUserData = async (id: string) => {
-  const user_info = await db.user.findUnique({
-    where: {
-      clerkId: id,
-    },
-    include: {
-      connections: true,
+export const getUserData = async () => {
+  const user = await getCurrentUser()
+  if (!user) return null
+
+  return db.user.findUnique({
+    where: { authId: user.authId },
+    select: {
+      connections: { select: { type: true } },
+      LocalGoogleCredential: { select: { id: true } },
     },
   })
-
-  return user_info
 }

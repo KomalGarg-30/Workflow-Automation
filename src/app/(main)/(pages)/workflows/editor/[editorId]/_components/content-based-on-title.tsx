@@ -58,15 +58,18 @@ const ContentBasedOnTitle = ({
         '/api/drive'
       )
       if (response) {
-        console.log(response.data.message.files[0])
-        toast.message("Fetched File")
-        setFile(response.data.message.files[0])
+        const files = response.data.message.files || []
+        toast.message('Fetched files')
+        setFile(files[0] || {})
+        nodeConnection.setGoogleNode([{ connected: true }])
       } else {
         toast.error('Something went wrong')
       }
     }
-    reqGoogle()
-  }, [])
+    reqGoogle().catch(() => {
+      toast.error('Connect Google Drive from the Connections page first.')
+    })
+  }, [nodeConnection.setGoogleNode])
 
   // @ts-ignore
   const nodeConnectionType: any = nodeConnection[nodeMapper[title]]

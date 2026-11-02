@@ -73,10 +73,12 @@ const RenderConnectionAccordion = ({
   const connectionData = (nodeConnection as any)[connectionKey]
 
   const isConnected =
-    alwaysTrue ||
-    (nodeConnection[connectionKey] &&
-      accessTokenKey &&
-      connectionData[accessTokenKey!])
+    title === 'Google Drive'
+      ? nodeConnection.googleNode.length > 0
+      : alwaysTrue ||
+        (nodeConnection[connectionKey] &&
+          accessTokenKey &&
+          connectionData[accessTokenKey!])
 
   return (
     <AccordionContent key={title}>

@@ -1,36 +1,30 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+## Local setup
 
-## Getting Started
+1. Copy `.env.example` to `.env` and set `DATABASE_URL`.
+2. Install dependencies:
 
-First, run the development server:
+   ```powershell
+   npm install --legacy-peer-deps
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+3. Apply the Prisma schema to the configured PostgreSQL database:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+   ```powershell
+   npx prisma db push
+   ```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+4. Start the development server:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+   ```powershell
+   npm run dev
+   ```
 
-## Learn More
+The development server uses HTTPS; open `https://localhost:3000` and trust the local certificate if prompted. Create an account at `/sign-up`.
 
-To learn more about Next.js, take a look at the following resources:
+Authentication is handled by the app using password hashes and server-side sessions; no Clerk account or keys are required. To use Google Drive, configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, and `GOOGLE_OAUTH_REDIRECT_URI`. Add `https://localhost:3000/api/auth/callback/google` as an authorized redirect URI in Google Cloud. Register `https://localhost:3000/api/auth/callback/discord`, `https://localhost:3000/api/auth/callback/notion`, and `https://localhost:3000/api/auth/callback/slack` with their providers if you enable those integrations. Google Drive change notifications also require a reachable `NGROK_URI`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Existing records previously associated with Clerk IDs are preserved in the database, but those accounts do not have local password hashes. They cannot sign in until a secure account-migration process is completed.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+## Deployment
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+Set `NEXT_PUBLIC_URL` and every OAuth callback URL to the deployed HTTPS origin, then apply the Prisma schema to the production database before deploying.

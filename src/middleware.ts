@@ -1,20 +1,26 @@
-import { authMiddleware } from '@clerk/nextjs'
+import { NextRequest, NextResponse } from 'next/server'
+import { authCookieName } from '@/lib/auth-cookie'
 
-export default authMiddleware({
-  publicRoutes: [
-    '/',
-    '/api/clerk-webhook',
-    '/api/drive-activity/notification',
-    '/api/payment/success',
-  ],
-  ignoredRoutes: [
-    '/api/auth/callback/discord',
-    '/api/auth/callback/notion',
-    '/api/auth/callback/slack',
-    '/api/flow',
-    '/api/cron/wait',
-  ],
-})
+const publicPaths = [
+  '/',
+  '/sign-in',
+  '/sign-up',
+  '/api/auth/sign-in',
+  '/api/auth/sign-up',
+  '/api/auth/sign-out',
+  '/api/drive-activity/notification',
+]
+
+export default function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
+  if (publicPaths.includes(pathname) || request.cookies.has(authCookieName)) {
+    return NextResponse.next()
+  }
+
+  const signInUrl = new URL('/sign-in', request.url)
+  signInUrl.searchParams.set('redirect_url', pathname)
+  return NextResponse.redirect(signInUrl)
+}
 
 export const config = {
   matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],

@@ -51,11 +51,13 @@ const ConnectionCard = ({
           <Link
             href={
               title == 'Discord'
-                ? process.env.NEXT_PUBLIC_DISCORD_REDIRECT!
+                ? '/api/auth/connect/discord'
                 : title == 'Notion'
-                ? process.env.NEXT_PUBLIC_NOTION_AUTH_URL!
+                ? '/api/auth/connect/notion'
                 : title == 'Slack'
-                ? process.env.NEXT_PUBLIC_SLACK_REDIRECT!
+                ? '/api/auth/connect/slack'
+                : title == 'Google Drive'
+                ? '/api/auth/google'
                 : '#'
             }
             className=" rounded-lg bg-primary p-2 font-bold text-primary-foreground"

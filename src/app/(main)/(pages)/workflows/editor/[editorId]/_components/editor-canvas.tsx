@@ -1,7 +1,7 @@
 'use client'
 import { EditorCanvasCardType, EditorNodeType } from '@/lib/types'
 import { useEditor } from '@/providers/editor-provider'
-import React, { useCallback, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import ReactFlow, {
   Background,
   Connection,
@@ -43,7 +43,60 @@ const EditorCanvas = (props: Props) => {
   const [isWorkFlowLoading, setIsWorkFlowLoading] = useState<boolean>(false)
   const [reactFlowInstance, setReactFlowInstance] =
     useState<ReactFlowInstance>()
+  const canvasRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
+
+  const addNodeAtPosition = useCallback(
+    (type: EditorCanvasCardType['type'], x: number, y: number) => {
+      if (!reactFlowInstance) {
+        toast.error('The workflow canvas is still loading.')
+        return
+      }
+
+      const cardType = EditorCanvasDefaultCardTypes[type]
+      const hasTrigger = nodes.some(
+        (node) => EditorCanvasDefaultCardTypes[node.type].type === 'Trigger'
+      )
+      if (cardType.type === 'Trigger' && hasTrigger) {
+        toast('Only one trigger can be added to automations at the moment')
+        return
+      }
+
+      const position = reactFlowInstance.screenToFlowPosition({ x, y })
+      const newNode: EditorNodeType = {
+        id: v4(),
+        type,
+        position,
+        data: {
+          title: type,
+          description: cardType.description,
+          completed: false,
+          current: false,
+          metadata: {},
+          type,
+        },
+      }
+      setNodes((currentNodes) => currentNodes.concat(newNode))
+    },
+    [nodes, reactFlowInstance]
+  )
+
+  const addNodeFromSidebar = useCallback(
+    (type: EditorCanvasCardType['type']) => {
+      const bounds = canvasRef.current?.getBoundingClientRect()
+      if (!bounds) {
+        toast.error('The workflow canvas is not available.')
+        return
+      }
+
+      addNodeAtPosition(
+        type,
+        bounds.left + bounds.width / 2,
+        bounds.top + bounds.height / 2
+      )
+    },
+    [addNodeAtPosition]
+  )
 
   const onDragOver = useCallback((event: any) => {
     event.preventDefault()
@@ -78,46 +131,10 @@ const EditorCanvas = (props: Props) => {
         'application/reactflow'
       )
 
-      // check if the dropped element is valid
-      if (typeof type === 'undefined' || !type) {
-        return
-      }
-
-      const triggerAlreadyExists = state.editor.elements.find(
-        (node) => node.type === 'Trigger'
-      )
-
-      if (type === 'Trigger' && triggerAlreadyExists) {
-        toast('Only one trigger can be added to automations at the moment')
-        return
-      }
-
-      // reactFlowInstance.project was renamed to reactFlowInstance.screenToFlowPosition
-      // and you don't need to subtract the reactFlowBounds.left/top anymore
-      // details: https://reactflow.dev/whats-new/2023-11-10
-      if (!reactFlowInstance) return
-      const position = reactFlowInstance.screenToFlowPosition({
-        x: event.clientX,
-        y: event.clientY,
-      })
-
-      const newNode = {
-        id: v4(),
-        type,
-        position,
-        data: {
-          title: type,
-          description: EditorCanvasDefaultCardTypes[type].description,
-          completed: false,
-          current: false,
-          metadata: {},
-          type: type,
-        },
-      }
-      //@ts-ignore
-      setNodes((nds) => nds.concat(newNode))
+      if (!type || !(type in EditorCanvasDefaultCardTypes)) return
+      addNodeAtPosition(type, event.clientX, event.clientY)
     },
-    [reactFlowInstance, state]
+    [addNodeAtPosition]
   )
 
   const handleClickCanvas = () => {
@@ -183,6 +200,7 @@ const EditorCanvas = (props: Props) => {
       <ResizablePanel defaultSize={70}>
         <div className="flex h-full items-center justify-center">
           <div
+            ref={canvasRef}
             style={{ width: '100%', height: '100%', paddingBottom: '70px' }}
             className="relative"
           >
@@ -267,7 +285,7 @@ const EditorCanvas = (props: Props) => {
             edges={edges}
             nodes={nodes}
           >
-            <EditorCanvasSidebar nodes={nodes} />
+            <EditorCanvasSidebar nodes={nodes} onAddNode={addNodeFromSidebar} />
           </FlowInstance>
         )}
       </ResizablePanel>

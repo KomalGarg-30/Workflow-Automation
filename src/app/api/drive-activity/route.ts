@@ -1,30 +1,17 @@
 import { google } from 'googleapis'
-import { auth, clerkClient } from '@clerk/nextjs'
 import { NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
 import { db } from '@/lib/db'
+import { getCurrentUser } from '@/lib/auth'
+import { getGoogleClientForUser } from '@/lib/google-oauth'
 
 export async function GET() {
-  const oauth2Client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.OAUTH2_REDIRECT_URI
-  )
-
-  const { userId } = auth()
-  if (!userId) {
-    return NextResponse.json({ message: 'User not found' })
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+  const oauth2Client = await getGoogleClientForUser(user.id)
+  if (!oauth2Client) {
+    return NextResponse.json({ message: 'Connect Google Drive first.' }, { status: 400 })
   }
-
-  const clerkResponse = await clerkClient.users.getUserOauthAccessToken(
-    userId,
-    'oauth_google'
-  )
-
-  const accessToken = clerkResponse[0].token
-  oauth2Client.setCredentials({
-    access_token: accessToken,
-  })
 
   const drive = google.drive({
     version: 'v3',
@@ -56,7 +43,7 @@ export async function GET() {
     //if listener created store its channel id in db
     const channelStored = await db.user.updateMany({
       where: {
-        clerkId: userId,
+        authId: user.authId,
       },
       data: {
         googleResourceId: listener.data.resourceId,
