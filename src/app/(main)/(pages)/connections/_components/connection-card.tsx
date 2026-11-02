@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card'
 import Image from 'next/image'
 import Link from 'next/link'
+import TelegramConnectionForm from './telegram-connection-form'
 
 type Props = {
   type: ConnectionTypes
@@ -16,6 +17,7 @@ type Props = {
   description: string
   callback?: () => void
   connected: {} & any
+  showTelegramForm?: boolean
 }
 
 const ConnectionCard = ({
@@ -24,6 +26,7 @@ const ConnectionCard = ({
   icon,
   title,
   connected,
+  showTelegramForm,
 }: Props) => {
   return (
     <Card className="flex w-full items-center justify-between">
@@ -43,7 +46,9 @@ const ConnectionCard = ({
         </div>
       </CardHeader>
       <div className="flex flex-col items-center gap-2 p-4">
-        {connected[type] ? (
+        {showTelegramForm ? (
+          <TelegramConnectionForm connected={Boolean(connected[type])} />
+        ) : connected[type] ? (
           <div className="border-bg-primary rounded-lg border-2 px-3 py-2 font-bold text-white">
             Connected
           </div>
@@ -58,6 +63,8 @@ const ConnectionCard = ({
                 ? '/api/auth/connect/slack'
                 : title == 'Google Drive'
                 ? '/api/auth/google'
+                : title == 'Telegram'
+                ? '/connections'
                 : '#'
             }
             className=" rounded-lg bg-primary p-2 font-bold text-primary-foreground"

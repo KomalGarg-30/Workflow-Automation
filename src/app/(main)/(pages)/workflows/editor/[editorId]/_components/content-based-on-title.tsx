@@ -84,6 +84,8 @@ const ContentBasedOnTitle = ({
               ? 'slackAccessToken'
               : title === 'Discord'
               ? 'webhookURL'
+              : title === 'Telegram'
+              ? 'botName'
               : title === 'Notion'
               ? 'accessToken'
               : ''

@@ -2,6 +2,7 @@ import { ConnectionProviderProps } from '@/providers/connections-provider'
 import { EditorCanvasCardType } from './types'
 import { EditorState } from '@/providers/editor-provider'
 import { getDiscordConnectionUrl } from '@/app/(main)/(pages)/connections/_actions/discord-connection'
+import { getTelegramConnection } from '@/app/(main)/(pages)/connections/_actions/telegram-connection'
 import {
   getNotionConnection,
   getNotionDatabase,
@@ -49,6 +50,11 @@ export const onContentChange = (
     onSlackContent(nodeConnection, event)
   } else if (nodeType === 'Discord') {
     onDiscordContent(nodeConnection, event)
+  } else if (nodeType === 'Telegram') {
+    nodeConnection.setTelegramNode((prev: any) => ({
+      ...prev,
+      content: event.target.value,
+    }))
   } else if (nodeType === 'Notion') {
     onNotionContent(nodeConnection, event)
   }
@@ -83,6 +89,11 @@ export const onAddTemplate = (
     onAddTemplateSlack(nodeConnection, template)
   } else if (title === 'Discord') {
     onAddTemplateDiscord(nodeConnection, template)
+  } else if (title === 'Telegram') {
+    nodeConnection.setTelegramNode((prev: any) => ({
+      ...prev,
+      content: `${prev.content} ${template}`,
+    }))
   }
 }
 
@@ -99,6 +110,15 @@ export const onConnections = async (
         content: '',
         webhookName: connection.name,
         guildName: connection.guildName,
+      })
+    }
+  }
+  if (editorState.editor.selectedNode.data.title == 'Telegram') {
+    const connection = await getTelegramConnection()
+    if (connection) {
+      nodeConnection.setTelegramNode({
+        ...connection,
+        content: '',
       })
     }
   }

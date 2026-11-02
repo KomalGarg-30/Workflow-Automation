@@ -25,6 +25,8 @@ Authentication is handled by the app using password hashes and server-side sessi
 
 Existing records previously associated with Clerk IDs are preserved in the database, but those accounts do not have local password hashes. They cannot sign in until a secure account-migration process is completed.
 
+To connect Telegram, create a bot with [BotFather](https://t.me/BotFather), add it to the destination chat (or start the bot in a private chat), then enter its token and the destination chat ID on the Connections page. For a channel, the bot must be an administrator and the chat ID can be its `@username`.
+
 ## Deployment
 
 Set `NEXT_PUBLIC_URL` and every OAuth callback URL to the deployed HTTPS origin, then apply the Prisma schema to the production database before deploying.

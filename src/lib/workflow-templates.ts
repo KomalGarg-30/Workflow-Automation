@@ -82,6 +82,12 @@ export const workflowTemplates: WorkflowTemplate[] = [
     'Notify a Discord channel when your connected Drive folder changes.',
     { name: 'Discord', image: '/discord.png' }
   ),
+  createDriveNotificationTemplate(
+    'drive-to-telegram',
+    'Google Drive to Telegram',
+    'Notify a Telegram chat when your connected Drive folder changes.',
+    { name: 'Telegram', image: '/telegram.svg' }
+  ),
   {
     id: 'drive-to-notion',
     name: 'Google Drive to Notion',

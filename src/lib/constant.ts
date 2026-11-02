@@ -129,6 +129,10 @@ export const EditorCanvasDefaultCardTypes = {
     description: 'Post messages to your discord server',
     type: 'Action',
   },
+  Telegram: {
+    description: 'Send messages to a Telegram chat',
+    type: 'Action',
+  },
   'Google Calendar': {
     description: 'Create a calendar invite.',
     type: 'Action',
@@ -160,6 +164,12 @@ export const CONNECTIONS: Connection[] = [
     image: '/discord.png',
     connectionKey: 'discordNode',
     accessTokenKey: 'webhookURL',
+  },
+  {
+    title: 'Telegram',
+    description: 'Connect a Telegram bot to send notifications and messages',
+    image: '/telegram.svg',
+    connectionKey: 'telegramNode',
   },
   {
     title: 'Notion',

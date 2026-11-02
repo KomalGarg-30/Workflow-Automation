@@ -9,6 +9,12 @@ export type ConnectionProviderProps = {
     guildName: string
   }
   setDiscordNode: React.Dispatch<React.SetStateAction<any>>
+  telegramNode: {
+    chatId: string
+    botName: string
+    content: string
+  }
+  setTelegramNode: React.Dispatch<React.SetStateAction<any>>
   googleNode: {}[]
   setGoogleNode: React.Dispatch<React.SetStateAction<any>>
   notionNode: {
@@ -19,6 +25,7 @@ export type ConnectionProviderProps = {
   }
   workflowTemplate: {
     discord?: string
+    telegram?: string
     notion?: string
     slack?: string
   }
@@ -37,6 +44,7 @@ export type ConnectionProviderProps = {
   setWorkFlowTemplate: React.Dispatch<
     React.SetStateAction<{
       discord?: string
+      telegram?: string
       notion?: string
       slack?: string
     }>
@@ -56,6 +64,11 @@ const InitialValues: ConnectionProviderProps = {
     webhookName: '',
     guildName: '',
   },
+  telegramNode: {
+    chatId: '',
+    botName: '',
+    content: '',
+  },
   googleNode: [],
   notionNode: {
     accessToken: '',
@@ -65,6 +78,7 @@ const InitialValues: ConnectionProviderProps = {
   },
   workflowTemplate: {
     discord: '',
+    telegram: '',
     notion: '',
     slack: '',
   },
@@ -81,6 +95,7 @@ const InitialValues: ConnectionProviderProps = {
   isLoading: false,
   setGoogleNode: () => undefined,
   setDiscordNode: () => undefined,
+  setTelegramNode: () => undefined,
   setNotionNode: () => undefined,
   setSlackNode: () => undefined,
   setIsLoading: () => undefined,
@@ -92,6 +107,7 @@ const { Provider } = ConnectionsContext
 
 export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
   const [discordNode, setDiscordNode] = useState(InitialValues.discordNode)
+  const [telegramNode, setTelegramNode] = useState(InitialValues.telegramNode)
   const [googleNode, setGoogleNode] = useState(InitialValues.googleNode)
   const [notionNode, setNotionNode] = useState(InitialValues.notionNode)
   const [slackNode, setSlackNode] = useState(InitialValues.slackNode)
@@ -103,6 +119,8 @@ export const ConnectionsProvider = ({ children }: ConnectionWithChildProps) => {
   const values = {
     discordNode,
     setDiscordNode,
+    telegramNode,
+    setTelegramNode,
     googleNode,
     setGoogleNode,
     notionNode,

@@ -10,6 +10,7 @@ const Connections = async () => {
     connections[connection.type] = true
   })
   connections['Google Drive'] = Boolean(user_info?.LocalGoogleCredential)
+  connections.Telegram = Boolean(user_info?.TelegramBot)
 
   return (
     <div className="relative flex flex-col gap-4">
@@ -28,6 +29,7 @@ const Connections = async () => {
               icon={connection.image}
               type={connection.title}
               connected={connections}
+              showTelegramForm={connection.title === 'Telegram'}
             />
           ))}
         </section>

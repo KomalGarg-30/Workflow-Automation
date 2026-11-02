@@ -1,6 +1,7 @@
 import { postContentToWebHook } from '@/app/(main)/(pages)/connections/_actions/discord-connection'
 import { onCreateNewPageInDatabase } from '@/app/(main)/(pages)/connections/_actions/notion-connection'
 import { postMessageToSlack } from '@/app/(main)/(pages)/connections/_actions/slack-connection'
+import { sendTelegramMessage } from '@/lib/telegram'
 import { db } from '@/lib/db'
 import axios from 'axios'
 import { headers } from 'next/headers'
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
         },
       })
       if (workflow) {
-        workflow.map(async (flow) => {
+        await Promise.all(workflow.map(async (flow) => {
           const flowPath = JSON.parse(flow.flowPath!)
           let current = 0
           while (current < flowPath.length) {
@@ -48,7 +49,23 @@ export async function POST(req: NextRequest) {
                   flow.discordTemplate!,
                   discordMessage.url
                 )
-                flowPath.splice(flowPath[current], 1)
+                flowPath.splice(current, 1)
+                current--
+              }
+            }
+            if (flowPath[current] == 'Telegram') {
+              const telegramBot = await db.telegramBot.findUnique({
+                where: { userId: flow.userId },
+                select: { botToken: true, chatId: true },
+              })
+              if (telegramBot && flow.telegramTemplate) {
+                await sendTelegramMessage(
+                  telegramBot.botToken,
+                  telegramBot.chatId,
+                  flow.telegramTemplate
+                )
+                flowPath.splice(current, 1)
+                current--
               }
             }
             if (flowPath[current] == 'Slack') {
@@ -63,7 +80,8 @@ export async function POST(req: NextRequest) {
                 channels,
                 flow.slackTemplate!
               )
-              flowPath.splice(flowPath[current], 1)
+              flowPath.splice(current, 1)
+              current--
             }
             if (flowPath[current] == 'Notion') {
               await onCreateNewPageInDatabase(
@@ -71,7 +89,8 @@ export async function POST(req: NextRequest) {
                 flow.notionAccessToken!,
                 JSON.parse(flow.notionTemplate!)
               )
-              flowPath.splice(flowPath[current], 1)
+              flowPath.splice(current, 1)
+              current--
             }
 
             if (flowPath[current] == 'Wait') {
@@ -100,7 +119,7 @@ export async function POST(req: NextRequest) {
                 }
               )
               if (res) {
-                flowPath.splice(flowPath[current], 1)
+                flowPath.splice(current, 1)
                 const cronPath = await db.workflows.update({
                   where: {
                     id: flow.id,
@@ -124,7 +143,7 @@ export async function POST(req: NextRequest) {
               credits: `${parseInt(user.credits!) - 1}`,
             },
           })
-        })
+        }))
         return Response.json(
           {
             message: 'flow completed',

@@ -67,9 +67,15 @@ export const onCreateNodeTemplate = async (
       },
     })
 
-    if (response) {
-      return 'Discord template saved'
-    }
+    if (response) return 'Discord template saved'
+  }
+  if (type === 'Telegram') {
+    const response = await db.workflows.update({
+      where: { id: workflowId },
+      data: { telegramTemplate: content },
+    })
+
+    if (response) return 'Telegram template saved'
   }
   if (type === 'Slack') {
     const response = await db.workflows.update({

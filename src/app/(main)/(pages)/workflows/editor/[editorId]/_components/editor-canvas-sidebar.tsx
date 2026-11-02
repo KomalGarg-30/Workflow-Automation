@@ -75,7 +75,9 @@ const EditorCanvasSidebar = ({ nodes, onAddNode }: Props) => {
             .filter(
               ([cardKey, cardType]) =>
                 (!nodes.length &&
-                  (cardType.type === 'Trigger' || cardKey === 'Discord')) ||
+                  (cardType.type === 'Trigger' ||
+                    cardKey === 'Discord' ||
+                    cardKey === 'Telegram')) ||
                 (nodes.length && cardType.type === 'Action')
             )
             .map(([cardKey, cardValue]) => (

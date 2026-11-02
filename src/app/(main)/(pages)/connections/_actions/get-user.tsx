@@ -12,6 +12,7 @@ export const getUserData = async () => {
     select: {
       connections: { select: { type: true } },
       LocalGoogleCredential: { select: { id: true } },
+      TelegramBot: { select: { id: true } },
     },
   })
 }

@@ -11,7 +11,12 @@ export const WorkflowFormSchema = z.object({
   description: z.string().min(1, 'Required'),
 })
 
-export type ConnectionTypes = 'Google Drive' | 'Notion' | 'Slack' | 'Discord'
+export type ConnectionTypes =
+  | 'Google Drive'
+  | 'Notion'
+  | 'Slack'
+  | 'Discord'
+  | 'Telegram'
 
 export type Connection = {
   title: ConnectionTypes
@@ -29,6 +34,7 @@ export type EditorCanvasTypes =
   | 'AI'
   | 'Slack'
   | 'Discord'
+  | 'Telegram'
   | 'Google Drive'
   | 'Notion'
   | 'Custom Webhook'
@@ -89,5 +95,6 @@ export const nodeMapper: Record<string, string> = {
   Notion: 'notionNode',
   Slack: 'slackNode',
   Discord: 'discordNode',
+  Telegram: 'telegramNode',
   'Google Drive': 'googleNode',
 }

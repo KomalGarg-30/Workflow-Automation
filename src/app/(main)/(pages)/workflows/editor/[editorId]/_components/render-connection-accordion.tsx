@@ -75,6 +75,8 @@ const RenderConnectionAccordion = ({
   const isConnected =
     title === 'Google Drive'
       ? nodeConnection.googleNode.length > 0
+      : title === 'Telegram'
+      ? Boolean(nodeConnection.telegramNode.botName)
       : alwaysTrue ||
         (nodeConnection[connectionKey] &&
           accessTokenKey &&

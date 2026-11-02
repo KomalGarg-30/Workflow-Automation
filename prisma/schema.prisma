@@ -29,6 +29,7 @@ model User {
   LocalGoogleCredential LocalGoogleCredential?
   sessions              Session[]
   DiscordWebhook        DiscordWebhook[]
+  TelegramBot           TelegramBot?
   Notion                Notion[]
   Slack                 Slack[]
   connections           Connections[]
@@ -73,6 +74,15 @@ model DiscordWebhook {
   user        User          @relation(fields: [userId], references: [authId])
   userId      String
   connections Connections[]
+}
+
+model TelegramBot {
+  id        String   @id @default(uuid())
+  botToken  String
+  chatId    String
+  botName   String
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [authId], onDelete: Cascade)
 }
 
 model Slack {
@@ -124,6 +134,7 @@ model Workflows {
   edges             String?
   name              String
   discordTemplate   String?
+  telegramTemplate  String?
   notionTemplate    String?
   slackTemplate     String?
   slackChannels     String[]

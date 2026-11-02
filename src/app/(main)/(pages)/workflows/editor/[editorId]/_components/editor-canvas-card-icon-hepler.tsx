@@ -10,6 +10,7 @@ import {
   MousePointerClickIcon,
   Plus,
   Slack,
+  Send,
   Timer,
   Webhook,
   Zap,
@@ -44,6 +45,13 @@ const EditorCanvasIconHelper = ({ type }: Props) => {
     case 'Slack':
       return (
         <Slack
+          className="flex-shrink-0"
+          size={30}
+        />
+      )
+    case 'Telegram':
+      return (
+        <Send
           className="flex-shrink-0"
           size={30}
         />

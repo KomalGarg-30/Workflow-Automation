@@ -173,6 +173,7 @@ const EditorCanvas = (props: Props) => {
       'Google Drive': EditorCanvasCardSingle,
       Notion: EditorCanvasCardSingle,
       Discord: EditorCanvasCardSingle,
+      Telegram: EditorCanvasCardSingle,
       'Custom Webhook': EditorCanvasCardSingle,
       'Google Calendar': EditorCanvasCardSingle,
       Wait: EditorCanvasCardSingle,
